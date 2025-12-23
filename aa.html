@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вопросы и Ответы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        select, input {
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+
+        select {
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:hover {
+            border-color: #999;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #444;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .stats {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Вопросы и Ответы</h1>
+        
+        <div class="controls">
+            <label for="category-select">Категория:</label>
+            <select id="category-select">
+                <option value="all">Все вопросы</option>
+                <option value="category1">Категория 1</option>
+                <option value="category2">Категория 2</option>
+                <option value="category3">Категория 3</option>
+            </select>
+            
+            <label for="search-input">Поиск:</label>
+            <input type="text" id="search-input" placeholder="Введите текст для поиска...">
+        </div>
+
+        <div class="stats" id="stats"></div>
+
+        <div class="section">
+            <h2 id="section-title">Все вопросы</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">№</th>
+                        <th style="width: 50%;">Вопрос</th>
+                        <th style="width: 50%;">Ответ</th>
+                    </tr>
+                </thead>
+                <tbody id="questions-body">
+                    <tr>
+                        <td colspan="3" class="empty-message">Загрузка...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // ЗДЕСЬ ВСТАВЬТЕ ВАШИ ВОПРОСЫ И ОТВЕТЫ
+        const allQuestions = [
+            { category: "category1", question: "1313213", answer: "33333" },
+            { category: "category1", question: "Вопрос 2", answer: "Ответ 2" },
+            { category: "category2", question: "Вопрос 3", answer: "Ответ 3" },
+            { category: "category2", question: "Вопрос 4", answer: "Ответ 4" },
+            { category: "category3", question: "Вопрос 5", answer: "Ответ 5" },
+            // ... добавьте остальные 395 вопросов здесь
+            // Формат: { category: "категория", question: "текст вопроса", answer: "текст ответа" }
+        ];
+
+        const categorySelect = document.getElementById('category-select');
+        const searchInput = document.getElementById('search-input');
+        const tbody = document.getElementById('questions-body');
+        const sectionTitle = document.getElementById('section-title');
+        const stats = document.getElementById('stats');
+
+        let currentCategory = 'all';
+        let searchTerm = '';
+
+        function highlightText(text, term) {
+            if (!term) return text;
+            const regex = new RegExp(`(${term})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        function renderQuestions() {
+            let filtered = allQuestions;
+
+            // Фильтр по категории
+            if (currentCategory !== 'all') {
+                filtered = filtered.filter(q => q.category === currentCategory);
+            }
+
+            // Фильтр по поиску
+            if (searchTerm) {
+                filtered = filtered.filter(q => 
+                    q.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    q.answer.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+
+            // Обновить статистику
+            stats.textContent = `Показано вопросов: ${filtered.length} из ${allQuestions.length}`;
+
+            // Отобразить вопросы
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-message">Ничего не найдено</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${highlightText(item.question, searchTerm)}</td>
+                    <td>${highlightText(item.answer, searchTerm)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Обработчик выбора категории
+        categorySelect.addEventListener('change', (e) => {
+            currentCategory = e.target.value;
+            const titles = {
+                'all': 'Все вопросы',
+                'category1': 'Категория 1',
+                'category2': 'Категория 2',
+                'category3': 'Категория 3'
+            };
+            sectionTitle.textContent = titles[currentCategory];
+            renderQuestions();
+        });
+
+        // Обработчик поиска
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            renderQuestions();
+        });
+
+        // Начальная загрузка
+        renderQuestions();
+    </script>
+</body>
+</html>
